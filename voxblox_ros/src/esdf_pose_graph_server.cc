@@ -54,6 +54,10 @@ void EsdfPoseGraphServer::setupRos() {
   esdf_map_sub_ = nh_private_.subscribe("esdf_map_in", 1,
                                         &EsdfPoseGraphServer::esdfMapCallback, this);
 
+  // Set up service
+  query_points_gradient_srv_ = nh_private_.advertiseService("queryGradientPoints",
+                            &EsdfPoseGraphServer::queryGradientPointsCallback, this);
+
   // Whether to clear each new pose as it comes in, and then set a sphere
   // around it to occupied.
   nh_private_.param("clear_sphere_for_planning", clear_sphere_for_planning_,
@@ -114,6 +118,63 @@ bool EsdfPoseGraphServer::generateEsdfCallback(
   publishAllUpdatedEsdfVoxels();
   publishSlices();
   return true;
+}
+
+bool EsdfPoseGraphServer::queryGradientPointsCallback(
+        radiation_srvs::QueryPeaks::Request& req,
+        radiation_srvs::QueryPeaks::Response& res){
+    float distance = req.distance;
+    std::vector<Eigen::Vector3d> queryPts;
+    for(auto point : req.querypoints){
+        queryPts.push_back(Eigen::Vector3d(point.x, point.y, point.z));
+    }
+    std::vector<int> querySuccess;
+    std::vector<Eigen::Vector3d> waypoints;
+    for(auto qPt : queryPts){
+        Eigen::Vector3d qPt_temp;
+        qPt_temp = qPt;
+        Eigen::Vector3d vec(0.0, 0.0, 0.0);
+        double coefficient = 0.1;
+        if(esdf_map_->isObserved(qPt)){
+            while(vec.norm() < distance){
+                Eigen::Vector3d gradient(100, 100, 100);
+                while( (coefficient*gradient).norm() > distance ){
+
+                    double gradientDistance;
+                    if(!esdf_map_->getDistanceAndGradientAtPosition(qPt_temp, &gradientDistance, &gradient)){
+                        ROS_ERROR("Point not in ESDF map...");
+                        break;
+                    }
+                    if( (coefficient*gradient).norm() > distance ){
+                        coefficient = coefficient/2;
+                    }
+                }
+                vec += gradient;
+                qPt_temp = qPt + vec; // update temporary waypoint.
+            }
+            Eigen::Vector3d waypoint = qPt + vec; // point which should be visited.
+            waypoints.push_back(waypoint);
+            querySuccess.push_back(1);
+        }
+        else{
+            // if the query point is not in the ESDF map you do not push back
+            // any waypoint.
+            querySuccess.push_back(0);
+        }
+    }
+
+    std::vector<geometry_msgs::Point> pointsForMessage;
+    for(auto waypoint : waypoints){
+        geometry_msgs::Point pt;
+        pt.x = waypoint[0];
+        pt.y = waypoint[1];
+        pt.z = waypoint[2];
+        pointsForMessage.push_back(pt);
+    }
+    res.querySuccess = querySuccess;
+    res.waypoints = pointsForMessage;
+    res.success = true;
+    return true;
 }
 
 void EsdfPoseGraphServer::updateEsdfEvent(const ros::TimerEvent& /*event*/) {

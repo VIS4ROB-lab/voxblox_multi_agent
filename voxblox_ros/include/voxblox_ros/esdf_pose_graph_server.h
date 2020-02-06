@@ -8,6 +8,8 @@
 #include <voxblox/integrator/esdf_integrator.h>
 #include <voxblox_msgs/Layer.h>
 
+#include <radiation_srvs/QueryPeaks.h>
+
 #include "voxblox_ros/tsdf_pose_graph_server.h"
 
 namespace voxblox {
@@ -78,6 +80,12 @@ class EsdfPoseGraphServer : public TsdfPoseGraphServer {
   /// constructor.
   void setupRos();
 
+  /// send multiple query points. those points are converted to waypoints accessible
+  /// for the drone, i.e. the points are shifted distance d away from the occupied
+  /// space into the free space.
+  bool queryGradientPointsCallback(radiation_srvs::QueryPeaks::Request& req,
+                                   radiation_srvs::QueryPeaks::Response& res);
+
   /// Publish markers for visualization.
   ros::Publisher esdf_pointcloud_pub_;
   ros::Publisher esdf_slice_pub_;
@@ -91,6 +99,11 @@ class EsdfPoseGraphServer : public TsdfPoseGraphServer {
 
   /// Services.
   ros::ServiceServer generate_esdf_srv_;
+
+  // service for querying points (e.g. radiation peaks) and a corresponding distance
+  // such that the resulting points are distance [m] away from the object the
+  // peaks were detected on.
+  ros::ServiceServer query_points_gradient_srv_;
 
   /// Timers.
   ros::Timer update_esdf_timer_;

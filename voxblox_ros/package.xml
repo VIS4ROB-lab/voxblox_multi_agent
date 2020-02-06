@@ -22,6 +22,7 @@
   <depend>pcl_conversions</depend>
   <depend>pcl_ros</depend>
   <depend>sensor_msgs</depend>
+  <depend>radiation_srvs</depend>
   <depend>tf</depend>
   <depend>voxblox</depend>
   <depend>voxblox_msgs</depend>
