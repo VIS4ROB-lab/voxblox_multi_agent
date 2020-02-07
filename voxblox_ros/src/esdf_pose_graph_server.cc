@@ -141,7 +141,7 @@ bool EsdfPoseGraphServer::queryGradientPointsCallback(
                 while( (coefficient*gradient).norm() > distance ){
 
                     double gradientDistance;
-                    if(!esdf_map_->getDistanceAndGradientAtPosition(qPt_temp, &gradientDistance, &gradient)){
+                    if(!esdf_map_->getDistanceAndGradientAtPosition(qPt, &gradientDistance, &gradient)){
                         ROS_ERROR("Point not in ESDF map...");
                         break;
                     }
@@ -150,7 +150,6 @@ bool EsdfPoseGraphServer::queryGradientPointsCallback(
                     }
                 }
                 vec += gradient;
-                qPt_temp = qPt + vec; // update temporary waypoint.
             }
             Eigen::Vector3d waypoint = qPt + vec; // point which should be visited.
             waypoints.push_back(waypoint);
