@@ -131,25 +131,41 @@ bool EsdfPoseGraphServer::queryGradientPointsCallback(
     std::vector<int> querySuccess;
     std::vector<Eigen::Vector3d> waypoints;
     for(auto qPt : queryPts){
-        Eigen::Vector3d qPt_temp;
+        Eigen::Vector3d qPt_temp; // temporary query points
         qPt_temp = qPt;
+        bool gradientReceived = false; // if gradient has been queried once.
         Eigen::Vector3d vec(0.0, 0.0, 0.0);
         double coefficient = 0.1;
-        if(esdf_map_->isObserved(qPt)){
+        if(esdf_map_->isObserved(qPt_temp)){
             while(vec.norm() < distance){
                 Eigen::Vector3d gradient(100, 100, 100);
+                Eigen::Vector3d oldGradient(100, 100, 100);
                 while( (coefficient*gradient).norm() > distance ){
 
                     double gradientDistance;
-                    if(!esdf_map_->getDistanceAndGradientAtPosition(qPt, &gradientDistance, &gradient)){
-                        ROS_ERROR("Point not in ESDF map...");
-                        break;
+                    if(!esdf_map_->getDistanceAndGradientAtPosition(qPt_temp, &gradientDistance, &gradient)){
+                        if(gradientReceived){
+                            // if we have a gradient yet, we ran out of the occupancy field.
+                            // keep the old gradient
+                            gradient = oldGradient;
+
+                        }
+                        else{
+                            // if we didn't get any gradient yet, break.
+                            ROS_ERROR("Point not in ESDF map...");
+                            break;
+                        }
+                    }
+                    else if(!gradientReceived){
+                        gradientReceived = true;
                     }
                     if( (coefficient*gradient).norm() > distance ){
                         coefficient = coefficient/2;
                     }
                 }
-                vec += gradient;
+                oldGradient = gradient;
+                vec += coefficient*gradient;
+                qPt_temp = qPt + vec;
             }
             Eigen::Vector3d waypoint = qPt + vec; // point which should be visited.
             waypoints.push_back(waypoint);
