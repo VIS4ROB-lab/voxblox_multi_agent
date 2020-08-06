@@ -3,11 +3,14 @@ This repository contains a multi-agent version of [Voxblox](https://github.com/e
 This repository is used in a wider framework for multi-robot path planning, available [here](https://github.com/VIS4ROB-lab/multi_robot_coordination).  
 
 If you use this Voxblox version in your academic work, please cite:  
-
-        _"Multi-robot Coordination with Agent-Server Architecture for Autonomous Navigation in Partially Unknown Environments"_ by Luca Bartolomei, Marco Karrer and Margarita Chli, IROS 2020.
+_"Multi-robot Coordination with Agent-Server Architecture for Autonomous Navigation in Partially Unknown Environments"_ by Luca Bartolomei, Marco Karrer and Margarita Chli, IROS 2020.
 
 ## Installation
-To install the multi-agent version of Voxblox, follow [these instructions](https://voxblox.readthedocs.io/en/latest/pages/Installation.html).
+To install the multi-agent version of Voxblox, follow [these instructions](https://voxblox.readthedocs.io/en/latest/pages/Installation.html). In addition, clone the following repository:
+```
+$ git clone git@github.com:VIS4ROB-lab/comm_msgs.git # with ssh
+$ git clone https://github.com/VIS4ROB-lab/comm_msgs.git # with https
+```
 
 ## ROS Nodes
 The multi-agent version of Voxblox allows to use both the standard implementation and the modified one. In particular:
