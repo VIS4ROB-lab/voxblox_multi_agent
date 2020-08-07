@@ -1,27 +1,19 @@
 <?xml version="1.0" encoding="ISO-8859-15"?>
 <launch>
-  <arg name="play_bag" default="false" />
-  <arg name="bag_file" default="/home/btearle/datasets/euroc/MH_01_easy.bag"/>
-  <arg name="voxel_size" default="0.3"/>
-  <arg name="process_every_nth_frame" default="1" />
-  <arg name="use_dense_stereo" default="false" />
-  <arg name="scale" default="1.0" />
+  <arg name="launch_prefix" default=""/> <!-- "gdb -ex run args" -->
+  <arg name="voxel_size"    default="0.3"/>
 
-  <node name="voxblox_node" pkg="voxblox_ros" type="esdf_server" output="screen" args="-alsologtostderr" clear_params="true"> <!-- launch-prefix="gdb -ex run args"-->
-    <!-- <remap from="pointcloud0" to="/pose_graph_backend/fused_pcl_world0"/>
-    <remap from="pointcloud1" to="/pose_graph_backend/fused_pcl_world1"/>
-    <remap from="pointcloud2" to="/pose_graph_backend/fused_pcl_world2"/> -->
-
+  <node name="voxblox_node" pkg="voxblox_ros" type="esdf_pose_graph_server" output="screen" args="-alsologtostderr" clear_params="true" launch-prefix="$(arg launch_prefix)">
+    <!-- Remapping -->
     <remap from="pointcloud_transform0" to="/pose_graph_backend/pcl_transform0"/>
     <remap from="pointcloud_transform1" to="/pose_graph_backend/pcl_transform1"/>
     <remap from="pointcloud_transform2" to="/pose_graph_backend/pcl_transform2"/>>
+    <remap from="transform" to="/pose_graph_backend/transform0"/>
 
+    <!-- Parameters -->
     <param name="use_tf_transforms" value="true"/>  
     <param name="world_frame" value="world"/>
     <param name="num_agents" value="4"/>
-    <!-- <param name="sensor_frame" value="cam_pcl"/> -->
-    <!-- <param name="min_time_between_msgs_sec" value="1.0"/> -->
-    <remap from="transform" to="/pose_graph_backend/transform0"/>
 
     <param name="use_freespace_pointcloud" value="false" />
     <param name="tsdf_voxel_size" value="$(arg voxel_size)" />
@@ -29,7 +21,6 @@
     <param name="voxel_carving_enabled" value="true" />
     <param name="color_mode" value="colors" />
     <param name="verbose" value="false" />
-    <!-- <remap from="transform" to="vicon/firefly_sbx/firefly_sbx" /> -->
     <param name="update_mesh_every_n_sec" value="2.0" />
     <param name="slice_level" value="-1.0" />
     <param name="method" value="fast" />
@@ -41,7 +32,5 @@
     <param name="pointcloud_queue_size" value="20"/>
 
     <rosparam file="$(find voxblox_ros)/cfg/euroc_dataset.yaml"/>
-
-    <param name="mesh_filename" value="$(find voxblox_ros)/mesh_results/$(anon euroc).ply" />
   </node>
 </launch>
